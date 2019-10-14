@@ -4,6 +4,7 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,21 +51,22 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/resources/**", "/h2-console/**", "/api/**");
+		web.ignoring().antMatchers("/resources/**", "/api/**");
 	}
 
 	@Override
 	protected void configure(final HttpSecurity http) throws Exception {
 		http.csrf().disable();
 		http.authorizeRequests()
-			.antMatchers("/secure/**").authenticated().anyRequest().permitAll()
-			.and().formLogin().permitAll()
+			.antMatchers("/secure/**").hasAnyRole("ADMIN","USER")
+			.antMatchers("/h2-console/**").hasRole("ADMIN")
+//			.and().formLogin().permitAll()
 //			.successHandler(successHandler)
 			.and().logout().logoutUrl("/doLogout").logoutSuccessUrl("/logout").permitAll()
 			.and().csrf().disable();
 
-//		http.csrf().ignoringAntMatchers("/h2-console/**")//don't apply CSRF protection to /h2-console
-//        .and().headers().frameOptions().sameOrigin();//allow use of frame to same origin urls
+		http.csrf().ignoringAntMatchers("/h2-console/**")//don't apply CSRF protection to /h2-console
+        .and().headers().frameOptions().sameOrigin();//allow use of frame to same origin urls
 
 	}
 
@@ -83,6 +85,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Bean
 	public ModelMapper modelMapper() {
-		return new ModelMapper();
+		ModelMapper  modelMapper = new ModelMapper();
+		modelMapper.getConfiguration()
+        .setMatchingStrategy(MatchingStrategies.STRICT);
+		return modelMapper;
 	}
 }

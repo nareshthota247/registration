@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
@@ -15,6 +16,7 @@ import com.example.demo.model.AuthorityType;
 import com.example.demo.model.ConfirmationToken;
 import com.example.demo.model.Status;
 import com.example.demo.model.User;
+import com.example.demo.model.UserDTO;
 import com.example.demo.service.EmailSenderService;
 import com.example.demo.service.UserService;
 
@@ -30,14 +32,19 @@ public class UserRegistrationController {
 	
 	@Autowired
 	PasswordEncoder encoder;
+	
+	@Autowired
+	ModelMapper modelMapper;
 
 	@PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
-	public ResponseEntity<Status> registration(@RequestBody User user) {
+	public ResponseEntity<Status> registration(@RequestBody UserDTO userDto) {
 
-		User existingUser = userServiceImpl.findByEmailIdIgnoreCase(user.getEmailId());
+		User existingUser = userServiceImpl.findByEmailIdIgnoreCase(userDto.getEmailId());
 		if (existingUser != null) {
 			return ResponseEntity.ok(new Status("Failed", "Email already exists!"));
 		} else {
+			
+			User user = modelMapper.map(userDto, User.class);
 			user.setPassword(encoder.encode(user.getPassword()));
 			user.setRole(userServiceImpl.getRole(AuthorityType.ROLE_USER));
 			userServiceImpl.saveUser(user);
@@ -77,9 +84,9 @@ public class UserRegistrationController {
 		
 	}
 	
-	@RequestMapping(value="/forgot-password", method=RequestMethod.POST)
-	public ResponseEntity<Status>  forgotUserPassword(@RequestBody User user) {
-		User existingUser = userServiceImpl.findByEmailIdIgnoreCase(user.getEmailId());
+	@PostMapping(value="/forgot-password")
+	public ResponseEntity<Status>  forgotUserPassword(@RequestBody UserDTO userDto) {
+		User existingUser = userServiceImpl.findByEmailIdIgnoreCase(userDto.getEmailId());
 		if(existingUser != null) {
 			// create token
 			ConfirmationToken confirmationToken = userServiceImpl.saveConfirmationToken(existingUser);
@@ -100,7 +107,7 @@ public class UserRegistrationController {
 		}
 	}
 	
-	@RequestMapping(value="/confirm-reset", method= {RequestMethod.GET, RequestMethod.POST})
+	@PostMapping(value="/confirm-reset")
 	public ResponseEntity<Status> validateResetToken(@RequestParam("token")String confirmationToken, @RequestParam("newPassword")String newPassword)
 	{
 		ConfirmationToken token = userServiceImpl.findByConfirmationToken(confirmationToken);

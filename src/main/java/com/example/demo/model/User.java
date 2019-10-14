@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 
@@ -16,8 +17,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
 @Entity
-public class User {
+public class User implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -247690830249673108L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 //	@Column(name="user_id")

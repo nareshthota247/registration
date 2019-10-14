@@ -6,6 +6,7 @@ import com.example.demo.model.AuthorityType;
 import com.example.demo.model.ConfirmationToken;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
+import com.example.demo.model.UserDTO;
 
 @Service
 public interface UserService {
