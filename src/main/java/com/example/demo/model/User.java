@@ -3,15 +3,17 @@ package com.example.demo.model;
 import java.util.Collection;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-
+import javax.persistence.ManyToOne;
 
 @Entity
 public class User {
@@ -35,14 +37,18 @@ public class User {
 	
 	private Date lastLogin;
 	
-	@ManyToMany
-    @JoinTable( 
-        name = "users_roles", 
-        joinColumns = @JoinColumn(
-          name = "user_id", referencedColumnName = "id"), 
-        inverseJoinColumns = @JoinColumn(
-          name = "role_id", referencedColumnName = "id")) 
-    private Collection<Role> roles;
+//	@ManyToMany
+//    @JoinTable( 
+//        name = "users_roles", 
+//        joinColumns = @JoinColumn(
+//          name = "user_id", referencedColumnName = "id"), 
+//        inverseJoinColumns = @JoinColumn(
+//          name = "role_id", referencedColumnName = "id")) 
+//    private Collection<Role> roles;
+	
+	@ManyToOne(cascade=CascadeType.PERSIST,fetch=FetchType.EAGER)
+    @JoinColumn(name="role")
+    private Role role;
 	
 	public String getEmailId() {
 		return emailId;
@@ -100,12 +106,12 @@ public class User {
 		this.id = id;
 	}
 
-	public Collection<Role> getRoles() {
-		return roles;
+	public Role getRole() {
+		return role;
 	}
 
-	public void setRoles(Collection<Role> roles) {
-		this.roles = roles;
+	public void setRole(Role role) {
+		this.role = role;
 	}
 
 }

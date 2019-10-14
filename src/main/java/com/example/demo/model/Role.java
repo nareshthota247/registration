@@ -1,14 +1,11 @@
 package com.example.demo.model;
 
-import java.util.Collection;
-
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 
 @Entity
 public class Role {
@@ -17,28 +14,17 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
  
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private AuthorityType name;
     
     public Role() {
-		// TODO Auto-generated constructor stub
+    	
 	}
     
-    public Role(String name) {
+    public Role(AuthorityType name) {
 		super();
 		this.name = name;
 	}
-
-	@ManyToMany(mappedBy = "roles")
-    private Collection<User> users;
- 
-    @ManyToMany
-    @JoinTable(
-        name = "roles_privileges", 
-        joinColumns = @JoinColumn(
-          name = "role_id", referencedColumnName = "id"), 
-        inverseJoinColumns = @JoinColumn(
-          name = "privilege_id", referencedColumnName = "id"))
-    private Collection<Privilege> privileges;
 
 	public Long getId() {
 		return id;
@@ -48,29 +34,16 @@ public class Role {
 		this.id = id;
 	}
 
-	public String getName() {
+	public AuthorityType getName() {
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(AuthorityType name) {
 		this.name = name;
 	}
+    
+    
 
-	public Collection<User> getUsers() {
-		return users;
-	}
-
-	public void setUsers(Collection<User> users) {
-		this.users = users;
-	}
-
-	public Collection<Privilege> getPrivileges() {
-		return privileges;
-	}
-
-	public void setPrivileges(Collection<Privilege> privileges) {
-		this.privileges = privileges;
-	}   
     
     
 }

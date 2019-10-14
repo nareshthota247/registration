@@ -15,7 +15,7 @@ import com.example.demo.repository.UserRepository;
 
 @RestController
 @RequestMapping("/secure")
-public class UserMaintanceRepository {
+public class UserMaintanceController {
 	
 	@Autowired
 	private UserRepository userRepository;

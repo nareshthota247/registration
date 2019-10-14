@@ -11,25 +11,22 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.model.AuthorityType;
 import com.example.demo.model.ConfirmationToken;
 import com.example.demo.model.Status;
 import com.example.demo.model.User;
-import com.example.demo.repository.ConfirmationTokenRepository;
-import com.example.demo.repository.UserRepository;
 import com.example.demo.service.EmailSenderService;
+import com.example.demo.service.UserService;
 
 @RestController
 @RequestMapping("/api")
 public class UserRegistrationController {
 
 	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
-	private ConfirmationTokenRepository confirmationTokenRepository;
-
-	@Autowired
 	private EmailSenderService emailSenderService;
+	
+	@Autowired
+	UserService userServiceImpl;
 	
 	@Autowired
 	PasswordEncoder encoder;
@@ -37,16 +34,16 @@ public class UserRegistrationController {
 	@PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
 	public ResponseEntity<Status> registration(@RequestBody User user) {
 
-		User existingUser = userRepository.findByEmailIdIgnoreCase(user.getEmailId());
+		User existingUser = userServiceImpl.findByEmailIdIgnoreCase(user.getEmailId());
 		if (existingUser != null) {
 			return ResponseEntity.ok(new Status("Failed", "Email already exists!"));
 		} else {
 			user.setPassword(encoder.encode(user.getPassword()));
-			userRepository.save(user);
+			user.setRole(userServiceImpl.getRole(AuthorityType.ROLE_USER));
+			userServiceImpl.saveUser(user);
 
-			ConfirmationToken confirmationToken = new ConfirmationToken(user);
 
-			confirmationTokenRepository.save(confirmationToken);
+			ConfirmationToken confirmationToken = userServiceImpl.saveConfirmationToken(user);
 
 			SimpleMailMessage mailMessage = new SimpleMailMessage();
 			mailMessage.setTo(user.getEmailId());
@@ -64,13 +61,13 @@ public class UserRegistrationController {
 	
 	@RequestMapping(value="/confirm-account", method= {RequestMethod.GET, RequestMethod.POST})
 	public ResponseEntity<Status> confirmUserAccount(@RequestParam("token")String confirmationToken) {
-		ConfirmationToken token = confirmationTokenRepository.findByConfirmationToken(confirmationToken);
+		ConfirmationToken token = userServiceImpl.findByConfirmationToken(confirmationToken);
 		
 		if(token != null)
 		{
-			User user = userRepository.findByEmailIdIgnoreCase(token.getUser().getEmailId());
+			User user = userServiceImpl.findByEmailIdIgnoreCase(token.getUser().getEmailId());
 			user.setEnabled(true);
-			userRepository.save(user);
+			userServiceImpl.saveUser(user);
 			return ResponseEntity.ok(new Status("Success", "accountVerified"));
 		}
 		else
@@ -82,13 +79,10 @@ public class UserRegistrationController {
 	
 	@RequestMapping(value="/forgot-password", method=RequestMethod.POST)
 	public ResponseEntity<Status>  forgotUserPassword(@RequestBody User user) {
-		User existingUser = userRepository.findByEmailIdIgnoreCase(user.getEmailId());
+		User existingUser = userServiceImpl.findByEmailIdIgnoreCase(user.getEmailId());
 		if(existingUser != null) {
 			// create token
-			ConfirmationToken confirmationToken = new ConfirmationToken(existingUser);
-			
-			// save it
-			confirmationTokenRepository.save(confirmationToken);
+			ConfirmationToken confirmationToken = userServiceImpl.saveConfirmationToken(existingUser);
 			
 			// create the email
 			SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -109,13 +103,13 @@ public class UserRegistrationController {
 	@RequestMapping(value="/confirm-reset", method= {RequestMethod.GET, RequestMethod.POST})
 	public ResponseEntity<Status> validateResetToken(@RequestParam("token")String confirmationToken, @RequestParam("newPassword")String newPassword)
 	{
-		ConfirmationToken token = confirmationTokenRepository.findByConfirmationToken(confirmationToken);
+		ConfirmationToken token = userServiceImpl.findByConfirmationToken(confirmationToken);
 		
 		if(token != null) {
-			User user = userRepository.findByEmailIdIgnoreCase(token.getUser().getEmailId());
+			User user = userServiceImpl.findByEmailIdIgnoreCase(token.getUser().getEmailId());
 			user.setEnabled(true);
 			user.setPassword(newPassword);
-			userRepository.save(user);
+			userServiceImpl.saveUser(user);
 			return ResponseEntity.ok(new Status("Success", "Password Reseted"));
 		} else {
 			return ResponseEntity.ok(new Status("Failed", "Token broken"));
