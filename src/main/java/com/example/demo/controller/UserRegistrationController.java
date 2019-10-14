@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +30,9 @@ public class UserRegistrationController {
 
 	@Autowired
 	private EmailSenderService emailSenderService;
+	
+	@Autowired
+	PasswordEncoder encoder;
 
 	@PostMapping(value = "/register", consumes = "application/json", produces = "application/json")
 	public ResponseEntity<Status> registration(@RequestBody User user) {
@@ -37,7 +41,7 @@ public class UserRegistrationController {
 		if (existingUser != null) {
 			return ResponseEntity.ok(new Status("Failed", "Email already exists!"));
 		} else {
-			user.setPassword(user.getPassword());
+			user.setPassword(encoder.encode(user.getPassword()));
 			userRepository.save(user);
 
 			ConfirmationToken confirmationToken = new ConfirmationToken(user);
